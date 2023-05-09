@@ -123,6 +123,7 @@ class Enemy(Ship):
         self.ship_img = ENEMY_SHIP
         self.laser_img = RED_LASER
         self.mask = pygame.mask.from_surface(self.ship_img)
+        self.vel = 1
 
     def shoot(self):
         if self.cool_down_counter == 0:
@@ -137,8 +138,8 @@ def collide(obj1, obj2):
     return obj1.mask.overlap(obj2.mask, (offset_x, offset_y)) != None
 
 
-def enemy_move(vel, enemy):
-    enemy.y += vel
+def enemy_move(enemy):
+    enemy.y += enemy.vel
 
 
 def player_move(player, player_vel):
@@ -165,7 +166,8 @@ def main():
 
     enemies = []
     wave_length = 5
-    enemy_vel = 1
+    enemy_vel_max = 3
+    enemy_vel_min = 1
 
     player_vel = 5
     laser_vel = 5
@@ -218,6 +220,8 @@ def main():
             wave_length += 5
             for i in range(wave_length):
                 enemy1 = Enemy(random.randrange(50, WIDTH - 100), random.randrange(-1500, -100))
+                enemy_vel = random.randrange(enemy_vel_min, enemy_vel_max)
+                enemy1.vel = enemy_vel
                 enemies.append(enemy1)
 
         for event in pygame.event.get():
@@ -229,9 +233,12 @@ def main():
 
         for enemy in enemies[:]:
             # enemy.move(enemy_vel)
-            enemy_thread = threading.Thread(target=enemy_move(enemy_vel, enemy))
+            enemy_thread = threading.Thread(target=enemy_move(enemy))
             enemy_thread.start()
             enemy.move_lasers(laser_vel, player)
+
+            if random.randrange(0, 2*60) == 1:
+                enemy.shoot()
 
             if collide(enemy, player):
                 player.health -= 10
