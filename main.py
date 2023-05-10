@@ -92,7 +92,7 @@ class Ship:
 
 
 class Player(Ship):
-    def __init__(self, x, y, health=100):
+    def __init__(self, x, y, health=1000):
         super().__init__(x, y, health)
         self.ship_img = PLAYER_SHIP
         self.laser_img = GREEN_LASER
@@ -160,7 +160,7 @@ def main():
     run = True
     FPS = 60
     level = 0
-    lives = 5
+    lives = 500
     main_font = pygame.font.SysFont("comicsans", 30)
     lost_font = pygame.font.SysFont("comicsans", 40)
 
@@ -190,8 +190,8 @@ def main():
         SCREEN.blit(level_label, (WIDTH - level_label.get_width() - 10, 10))
         SCREEN.blit(hp_label, (10, HEIGHT - 50))
 
-        for enemy in enemies:
-            enemy.draw(SCREEN)
+        for enemy_ship in enemies:
+            enemy_ship.draw(SCREEN)
 
         player.draw(SCREEN)
 
@@ -232,12 +232,11 @@ def main():
         player_thread.start()
 
         for enemy in enemies[:]:
-            # enemy.move(enemy_vel)
             enemy_thread = threading.Thread(target=enemy_move(enemy))
             enemy_thread.start()
             enemy.move_lasers(laser_vel, player)
 
-            if random.randrange(0, 2*60) == 1:
+            if random.randrange(0, 2 * 60) == 1:
                 enemy.shoot()
 
             if collide(enemy, player):
@@ -246,6 +245,13 @@ def main():
             elif enemy.y + enemy.get_height() > HEIGHT:
                 lives -= 1
                 enemies.remove(enemy)
+        if len(enemies) > 1:
+            for i in range(len(enemies)):
+                for j in range(i + 1, len(enemies)):
+                    print("i: " + str(i) + " j: " + str(j))
+                    if collide(enemies[i], enemies[j]):
+                        enemies.pop(i)
+                        enemies.pop(j)
         player.move_lasers(-laser_vel, enemies)
 
 
