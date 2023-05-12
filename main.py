@@ -1,3 +1,4 @@
+import itertools
 import threading
 
 import pygame
@@ -219,7 +220,8 @@ def main():
             level += 1
             wave_length += 5
             for i in range(wave_length):
-                enemy1 = Enemy(random.randrange(50, WIDTH - 100), random.randrange(-1500, -100))
+                #enemy1 = Enemy(random.randrange(50, WIDTH - 100), random.randrange(-1500, -100))
+                enemy1 = Enemy(100, random.randrange(-1500, -100))
                 enemy_vel = random.randrange(enemy_vel_min, enemy_vel_max)
                 enemy1.vel = enemy_vel
                 enemies.append(enemy1)
@@ -246,12 +248,10 @@ def main():
                 lives -= 1
                 enemies.remove(enemy)
         if len(enemies) > 1:
-            for i in range(len(enemies)):
-                for j in range(i + 1, len(enemies)):
-                    print("i: " + str(i) + " j: " + str(j))
-                    if collide(enemies[i], enemies[j]):
-                        enemies.pop(i)
-                        enemies.pop(j)
+            for a, b in itertools.combinations(enemies, 2):
+                if collide(a, b):
+                    enemies.remove(a)
+                    enemies.remove(b)
         player.move_lasers(-laser_vel, enemies)
 
 
