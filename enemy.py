@@ -9,14 +9,16 @@ import os
 ENEMY_SHIP = pygame.image.load(os.path.join("assets", "enemy.png"))
 
 # Player
-PLAYER_SHIP = pygame.image.load(os.path.join("assets", "player.png"))
+# PLAYER_SHIP = pygame.image.load(os.path.join("assets", "player.png"))
 
 # Lasers
 RED_LASER = pygame.image.load(os.path.join("assets", "pixel_laser_red.png"))
 WIDTH, HEIGHT = 750, 750
+
+
 class Enemy(Ship):
 
-    def __init__(self, x, y, health=100):
+    def __init__(self, x, y, health=10):
         super().__init__(x, y, health)
         self.ship_img = ENEMY_SHIP
         self.laser_img = RED_LASER

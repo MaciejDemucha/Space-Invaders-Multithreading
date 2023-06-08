@@ -1,9 +1,11 @@
 import os
 import random
+import sys
 import threading
 
 import pygame
 
+from boss import Boss
 from enemy import Enemy
 from player import Player
 
@@ -44,6 +46,9 @@ def player_move(player, player_vel):
         player.y += player_vel
     if keys[pygame.K_SPACE]:
         player.shoot()
+    if keys[pygame.K_ESCAPE]:
+        pygame.quit()
+        sys.exit()
 
 
 def main():
@@ -58,9 +63,14 @@ def main():
     enemy_vel_max = 3
     enemy_vel_min = 1
 
+    # bosses with their own layers
+    bosses = []
+    layers = []
+
+    bosses_count = 3
+
     for i in range(5):
-        # enemy1 = Enemy(random.randrange(50, WIDTH - 100), random.randrange(-1500, -100))
-        enemy1 = Enemy(100, random.randrange(-1500, -100))
+        enemy1 = Enemy(random.randrange(50, WIDTH - 100), random.randrange(-1500, -100))
         enemy_vel = random.randrange(enemy_vel_min, enemy_vel_max)
         enemy1.vel = enemy_vel
         enemies.append(enemy1)
@@ -69,6 +79,7 @@ def main():
     player_vel = 5
 
     clock = pygame.time.Clock()
+    mutex = threading.Lock()
 
     lost = False
     lost_count = 0
@@ -79,13 +90,21 @@ def main():
         lives_label = main_font.render(f"Lives: {lives}", 1, (255, 255, 255))
         level_label = main_font.render(f"Level: {level}", 1, (255, 255, 255))
         hp_label = main_font.render(f"Health: {player.health}", 1, (255, 255, 255))
+        enemies_label = main_font.render(f"Enemies: {len(enemies)}", 1, (255, 255, 255))
+        bosses_label = main_font.render(f"Bosses: {len(bosses)}", 1, (255, 255, 255))
 
         SCREEN.blit(lives_label, (10, 10))
         SCREEN.blit(level_label, (WIDTH - level_label.get_width() - 10, 10))
         SCREEN.blit(hp_label, (10, HEIGHT - 50))
+        SCREEN.blit(enemies_label, (WIDTH - 170, HEIGHT - 50))
+        SCREEN.blit(bosses_label, (WIDTH - 330, HEIGHT - 50))
         for enemy1 in enemies:
             enemy1.draw(SCREEN)
         player.draw(SCREEN)
+
+        # blitting bosses' layers onto the main window
+        for layer in layers:
+            SCREEN.blit(layer, (0, 0))
 
         if lost:
             lost_label = lost_font.render("You Lost!!", 1, (255, 255, 255))
@@ -107,26 +126,54 @@ def main():
             else:
                 continue
 
-        if len(enemies) == 0:
+        if len(enemies) == 0 and len(bosses) == 0:
             level += 1
             wave_length += 5
             for i in range(wave_length):
-                # enemy1 = Enemy(random.randrange(50, WIDTH - 100), random.randrange(-1500, -100))
-                enemy1 = Enemy(100, random.randrange(-1500, -100))
+                enemy1 = Enemy(random.randrange(50, WIDTH - 100), random.randrange(-1500, -100))
                 enemy_vel = random.randrange(enemy_vel_min, enemy_vel_max)
                 enemy1.vel = enemy_vel
                 enemies.append(enemy1)
 
+            # creating bosses and their layers
+            for i in range(bosses_count):
+                # transparent layers on which bosses are going to be shown
+                layer = pygame.Surface((WIDTH, HEIGHT))
+                layer.set_colorkey((255, 255, 0))
+                layers.append(layer)
+
+                # creating a boss, assigning it its layer and starting its thread
+                boss = Boss(random.randrange(100, WIDTH - 200), random.randrange(0, HEIGHT - 300), layer)
+
+                bosses.append(boss)
+                boss.start()
+
+
+        # if boss' health is 0 or less - removing boss
+        for boss in bosses:
+            if boss.health <= 0:
+                index = bosses.index(boss)
+                boss.join()
+                bosses.remove(boss)
+                layers.remove(layers[index])
+
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
+                print("Koniec gry")
+                run = False
+                for boss in bosses:
+                    mutex.acquire()
+                    try:
+                        boss.health = 0
+                        boss.join()
+                    finally:
+                        mutex.release()
                 quit()
 
-        player_thread = threading.Thread(target=player_move(player, player_vel))
-        player.move_lasers(-5, enemies)
-        player_thread.start()
+        player_move(player, player_vel)
+        player.move_lasers(-5, enemies, bosses)
         for enemy in enemies:
-            enemy_thread = threading.Thread(target=enemy.run_thread(player, enemies, lives))
-            enemy_thread.start()
+            enemy.run_thread(player, enemies, lives)
 
 
 def main_menu():
@@ -138,8 +185,6 @@ def main_menu():
         SCREEN.blit(title_label, (WIDTH / 2 - title_label.get_width() / 2, 350))
         pygame.display.update()
         for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                run = False
             if event.type == pygame.MOUSEBUTTONDOWN:
                 main()
     pygame.quit()
