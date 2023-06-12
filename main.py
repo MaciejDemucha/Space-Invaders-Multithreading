@@ -29,10 +29,15 @@ GREEN_LASER = pygame.image.load(os.path.join("assets", "pixel_laser_green.png"))
 # Background
 BG = pygame.transform.scale(pygame.image.load(os.path.join("assets", "background-black.png")), (WIDTH, HEIGHT))
 run = True
+lost = False
 enemies = []
-lives = 500
+lives = 10
 
 player = Player(300, 630)
+
+main_font = pygame.font.SysFont("comicsans", 30)
+lost_font = pygame.font.SysFont("comicsans", 40)
+title_font = pygame.font.SysFont("comicsans", 50)
 
 
 def player_move(player, player_vel):
@@ -57,9 +62,6 @@ def main():
     FPS = 60
     level = 0
 
-    main_font = pygame.font.SysFont("comicsans", 30)
-    lost_font = pygame.font.SysFont("comicsans", 40)
-
     enemies = []
     enemy_vel_max = 3
     enemy_vel_min = 1
@@ -68,22 +70,18 @@ def main():
     bosses = []
     layers = []
 
-    bosses_count = 3
-
-    for i in range(5):
-        enemy1 = Enemy(random.randrange(50, WIDTH - 100), random.randrange(-1500, -100))
+    bosses_count = 2
+    wave_length = 3
+    for i in range(wave_length):
+        enemy1 = Enemy(random.randrange(50, WIDTH - 100), random.randrange(-150, -30))
         enemy_vel = random.randrange(enemy_vel_min, enemy_vel_max)
         enemy1.vel = enemy_vel
         enemies.append(enemy1)
-    wave_length = 5
 
     player_vel = 5
 
     clock = pygame.time.Clock()
     mutex = threading.Lock()
-
-    lost = False
-    lost_count = 0
 
     def redraw_window():
         SCREEN.blit(BG, (0, 0))
@@ -107,31 +105,25 @@ def main():
         for layer in layers:
             SCREEN.blit(layer, (0, 0))
 
-        if lost:
-            lost_label = lost_font.render("You Lost!!", 1, (255, 255, 255))
-            SCREEN.blit(lost_label, (WIDTH / 2 - lost_label.get_width() / 2, 350))
-
         pygame.display.update()
 
     while run:
         clock.tick(FPS)
         redraw_window()
+        global lost
 
-        if lives <= 0 or player.health <= 0:
+        if player.health <= 0:
             lost = True
-            lost_count += 1
-
-        if lost:
-            if lost_count > FPS * 3:
-                run = False
-            else:
-                continue
+            run = False
 
         if len(enemies) == 0 and len(bosses) == 0:
             level += 1
-            wave_length += 5
+            wave_length += 3
+            if level % 2 == 0:
+                bosses_count += 1
+
             for i in range(wave_length):
-                enemy1 = Enemy(random.randrange(50, WIDTH - 100), random.randrange(-1500, -100))
+                enemy1 = Enemy(random.randrange(50, WIDTH - 100), random.randrange(-150, -30))
                 enemy_vel = random.randrange(enemy_vel_min, enemy_vel_max)
                 enemy1.vel = enemy_vel
                 enemies.append(enemy1)
@@ -149,7 +141,6 @@ def main():
                 bosses.append(boss)
                 boss.start()
 
-
         # if boss' health is 0 or less - removing boss
         for boss in bosses:
             if boss.health <= 0:
@@ -160,7 +151,6 @@ def main():
 
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
-                print("Koniec gry")
                 run = False
                 for boss in bosses:
                     mutex.acquire()
@@ -173,6 +163,11 @@ def main():
 
         player_move(player, player_vel)
         player.move_lasers(-5, enemies, bosses)
+        # checking for collision between player and enemies
+        for enemy in enemies:
+            enemy.enemy_interaction(player, enemies, lives)
+
+        # checking for collision between player and bosses
         for boss in bosses:
             mutex.acquire()
             try:
@@ -180,21 +175,27 @@ def main():
                     player.health -= 5
             finally:
                 mutex.release()
-        for enemy in enemies:
-            enemy.run_thread(player, enemies, lives)
 
 
 def main_menu():
-    title_font = pygame.font.SysFont("comicsans", 70)
-    run = True
-    while run:
+    run_game = True
+    while run_game:
         SCREEN.blit(BG, (0, 0))
-        title_label = title_font.render("Press the mouse to begin...", 1, (255, 255, 255))
-        SCREEN.blit(title_label, (WIDTH / 2 - title_label.get_width() / 2, 350))
-        pygame.display.update()
-        for event in pygame.event.get():
-            if event.type == pygame.MOUSEBUTTONDOWN:
-                main()
+        if lost:
+            lost_label = lost_font.render("You Lost!! Press the mouse to exit", 1, (255, 255, 255))
+            SCREEN.blit(lost_label, (WIDTH / 2 - lost_label.get_width() / 2, 350))
+            pygame.display.update()
+            for event in pygame.event.get():
+                if event.type == pygame.MOUSEBUTTONDOWN:
+                    run_game = False
+        else:
+            title_label = title_font.render("Press the mouse to begin...", 1, (255, 255, 255))
+            SCREEN.blit(title_label, (WIDTH / 2 - title_label.get_width() / 2, 350))
+            pygame.display.update()
+            for event in pygame.event.get():
+                if event.type == pygame.MOUSEBUTTONDOWN:
+                    main()
+
     pygame.quit()
 
 

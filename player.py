@@ -10,7 +10,7 @@ GREEN_LASER = pygame.image.load(os.path.join("assets", "pixel_laser_green.png"))
 WIDTH, HEIGHT = 750, 750
 
 class Player(Ship):
-    def __init__(self, x, y, health=1000):
+    def __init__(self, x, y, health=100):
         super().__init__(x, y, health)
         self.ship_img = PLAYER_SHIP
         self.laser_img = GREEN_LASER

@@ -8,9 +8,6 @@ import os
 
 ENEMY_SHIP = pygame.image.load(os.path.join("assets", "enemy.png"))
 
-# Player
-# PLAYER_SHIP = pygame.image.load(os.path.join("assets", "player.png"))
-
 # Lasers
 RED_LASER = pygame.image.load(os.path.join("assets", "pixel_laser_red.png"))
 WIDTH, HEIGHT = 750, 750
@@ -31,7 +28,7 @@ class Enemy(Ship):
             self.lasers.append(laser)
             self.cool_down_counter = 1
 
-    def run_thread(self, player, enemies, lives):
+    def enemy_interaction(self, player, enemies, lives):
         laser_vel = 5
 
         self.y += self.vel
@@ -46,8 +43,3 @@ class Enemy(Ship):
         elif self.y + self.get_height() > HEIGHT:
             lives -= 1
             enemies.remove(self)
-        if len(enemies) > 1:
-            for a, b in itertools.combinations(enemies, 2):
-                if collide(a, b):
-                    enemies.remove(a)
-                    enemies.remove(b)
