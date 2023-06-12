@@ -7,6 +7,7 @@ import pygame
 
 from boss import Boss
 from enemy import Enemy
+from laser import collide
 from player import Player
 
 pygame.font.init()
@@ -172,6 +173,13 @@ def main():
 
         player_move(player, player_vel)
         player.move_lasers(-5, enemies, bosses)
+        for boss in bosses:
+            mutex.acquire()
+            try:
+                if collide(boss, player):
+                    player.health -= 5
+            finally:
+                mutex.release()
         for enemy in enemies:
             enemy.run_thread(player, enemies, lives)
 
