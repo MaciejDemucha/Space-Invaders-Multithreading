@@ -68,3 +68,6 @@ samym ryzyko wystąpienia niezdefiniowanego zachowania i konfliktów.
 
 </div>
 
+<p align="center">
+  <img src="game.png" title="hover text">
+</p>
