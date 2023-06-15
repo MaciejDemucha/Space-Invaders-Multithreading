@@ -5,9 +5,9 @@ import os
 PLAYER_SHIP = pygame.image.load(os.path.join("assets", "player.png"))
 
 # Lasers
-RED_LASER = pygame.image.load(os.path.join("assets", "pixel_laser_red.png"))
 GREEN_LASER = pygame.image.load(os.path.join("assets", "pixel_laser_green.png"))
 WIDTH, HEIGHT = 750, 750
+
 
 class Player(Ship):
     def __init__(self, x, y, health=100):
@@ -17,6 +17,7 @@ class Player(Ship):
         self.mask = pygame.mask.from_surface(self.ship_img)
         self.max_health = health
 
+# Movement of lasers, interaction between player's lasers and enemies
     def move_lasers(self, vel, enemies, bosses):
         self.cooldown()
         for laser in self.lasers:

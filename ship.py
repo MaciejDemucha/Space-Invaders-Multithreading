@@ -4,6 +4,7 @@ WIDTH, HEIGHT = 750, 750
 
 
 class Ship:
+    # Parameter limiting rate of fire
     COOLDOWN = 30
 
     def __init__(self, x, y, health=100):
@@ -20,6 +21,7 @@ class Ship:
         for laser in self.lasers:
             laser.draw(window)
 
+    # Movement of lasers, remove if hit the end of screen or object, decrease object's health by 10
     def move_lasers(self, vel, obj):
         self.cooldown()
         for laser in self.lasers:

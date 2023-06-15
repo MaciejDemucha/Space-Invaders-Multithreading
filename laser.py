@@ -20,8 +20,10 @@ class Laser:
     def move(self, vel):
         self.y += vel
 
+    # Check if laser is at the end of the screen and needs to be removed
     def off_screen(self, height):
         return not (self.y <= height and self.y >= 0)
 
+    # Collision with objects
     def collision(self, obj):
         return collide(self, obj)

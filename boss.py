@@ -3,17 +3,15 @@ import os
 import random
 import threading
 from ship import Ship
-from laser import Laser, collide
 
 clock = pygame.time.Clock()
-WIDTH, HEIGHT = 800, 750
+WIDTH, HEIGHT = 750, 750
 
 main_path = os.path.dirname(os.path.realpath(__file__))
 mutex = threading.Lock()
 
 # Load images
 BOSS1_SPACESHIP = pygame.image.load(os.path.join("assets", "boss.png"))
-RED_LASER = pygame.image.load(os.path.join("assets", "pixel_laser_red.png"))
 
 
 # Class representing the boss ship objects which using threading to run
@@ -26,7 +24,6 @@ class Boss(Ship, threading.Thread):
         self.not_collision = True
         super().__init__(x, y, health)
         self.ship_img = BOSS1_SPACESHIP
-        self.laser_img = RED_LASER
         self.mask = pygame.mask.from_surface(self.ship_img)
         self.layer = layer
         self.max_health = health
@@ -34,7 +31,8 @@ class Boss(Ship, threading.Thread):
         self.vel_y = 4.0
         self.vel_x = random.randrange(0, 10)
 
-    # function used to determine whether the ship has hit one of the game area's borders, changes the ship's speed to be used further
+    # function used to determine whether the ship has hit one of the game area's borders, changes the ship's speed to
+    # be used further
     def check_border(self):
         if self.x < 0 or (self.x + self.ship_img.get_width()) > WIDTH:
             self.vel_x *= -1.0
@@ -46,7 +44,8 @@ class Boss(Ship, threading.Thread):
     def __str__(self):
         return str(self.health)
 
-    # run() method used by the threading aspect of the class object, moves and draws the ship on its layer each frame, provided that its health is positive
+    # run() method used by the threading aspect of the class object, moves and draws the ship on its layer each
+    # frame, provided that its health is positive
     def run(self):
         while self.health > 0:
             clock.tick(60)
@@ -79,10 +78,3 @@ class Boss(Ship, threading.Thread):
         self.check_border()
         self.x += self.vel_x
         self.y += self.vel_y
-
-    # currently unused, spawns weapon objects at random time intervals
-    def shoot(self):
-        if self.cool_down_counter == 0:
-            laser = Laser(self.x - 20, self.y, self.laser_img)
-            self.lasers.append(laser)
-            self.cool_down_counter = 1

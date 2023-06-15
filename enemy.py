@@ -1,4 +1,3 @@
-import itertools
 import random
 
 from laser import Laser, collide
@@ -27,19 +26,3 @@ class Enemy(Ship):
             laser = Laser(self.x - 20, self.y, self.laser_img)
             self.lasers.append(laser)
             self.cool_down_counter = 1
-
-    def enemy_interaction(self, player, enemies, lives):
-        laser_vel = 5
-
-        self.y += self.vel
-        self.move_lasers(laser_vel, player)
-
-        if random.randrange(0, 2 * 60) == 1:
-            self.shoot()
-
-        if collide(self, player):
-            player.health -= 10
-            enemies.remove(self)
-        elif self.y + self.get_height() > HEIGHT:
-            lives -= 1
-            enemies.remove(self)

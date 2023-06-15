@@ -12,11 +12,13 @@ from player import Player
 
 pygame.font.init()
 
+# Set width and height of game's screen
 WIDTH, HEIGHT = 750, 750
 SCREEN = pygame.display.set_mode((WIDTH, HEIGHT))
 pygame.display.set_caption("Space Invaders")
 
 # Load images
+# Enemy
 ENEMY_SHIP = pygame.image.load(os.path.join("assets", "enemy.png"))
 
 # Player
@@ -28,18 +30,22 @@ GREEN_LASER = pygame.image.load(os.path.join("assets", "pixel_laser_green.png"))
 
 # Background
 BG = pygame.transform.scale(pygame.image.load(os.path.join("assets", "background-black.png")), (WIDTH, HEIGHT))
+# Variables indicating if game should run
 run = True
 lost = False
-enemies = []
+
+# Player's starting location
+player = Player(300, 630)
+# Lives - how many times enemies can pass through the end of the screen
 lives = 10
 
-player = Player(300, 630)
-
+# Fonts
 main_font = pygame.font.SysFont("comicsans", 30)
 lost_font = pygame.font.SysFont("comicsans", 40)
 title_font = pygame.font.SysFont("comicsans", 50)
 
 
+# key binding
 def player_move(player, player_vel):
     keys = pygame.key.get_pressed()
     if keys[pygame.K_a] and player.x - player_vel > 0:  # left
@@ -57,12 +63,33 @@ def player_move(player, player_vel):
         sys.exit()
 
 
-def main():
-    global run, enemies
-    FPS = 60
-    level = 0
+# Collision between enemies and player
+def enemy_interaction(enemy, player, enemies):
+    global lives
+    laser_vel = 5
 
+    enemy.y += enemy.vel
+    enemy.move_lasers(laser_vel, player)
+
+    if random.randrange(0, 2 * 60) == 1:
+        enemy.shoot()
+
+    if collide(enemy, player):
+        player.health -= 10
+        enemies.remove(enemy)
+    elif enemy.y + enemy.get_height() > HEIGHT:
+        lives -= 1
+        enemies.remove(enemy)
+
+
+def main():
+    global run
+    FPS = 60
+    # Current level
+    level = 0
+    # List of enemies
     enemies = []
+    # Max and min velocity of enemies
     enemy_vel_max = 3
     enemy_vel_min = 1
 
@@ -70,14 +97,16 @@ def main():
     bosses = []
     layers = []
 
+    # Number of bosses and enemies
     bosses_count = 2
     wave_length = 3
+    # Creating enemies for first level
     for i in range(wave_length):
         enemy1 = Enemy(random.randrange(50, WIDTH - 100), random.randrange(-150, -30))
         enemy_vel = random.randrange(enemy_vel_min, enemy_vel_max)
         enemy1.vel = enemy_vel
         enemies.append(enemy1)
-
+    # Player's velocity
     player_vel = 5
 
     clock = pygame.time.Clock()
@@ -97,6 +126,7 @@ def main():
         SCREEN.blit(hp_label, (10, HEIGHT - 50))
         SCREEN.blit(enemies_label, (WIDTH - 170, HEIGHT - 50))
         SCREEN.blit(bosses_label, (WIDTH - 330, HEIGHT - 50))
+        # draw enemies and player
         for enemy1 in enemies:
             enemy1.draw(SCREEN)
         player.draw(SCREEN)
@@ -111,17 +141,17 @@ def main():
         clock.tick(FPS)
         redraw_window()
         global lost
-
-        if player.health <= 0:
+        # Check for endgame conditions
+        if player.health <= 0 or lives <= 0:
             lost = True
             run = False
-
+        # Check if new level needs to be set
         if len(enemies) == 0 and len(bosses) == 0:
             level += 1
             wave_length += 3
             if level % 2 == 0:
                 bosses_count += 1
-
+            # Fill enemies list
             for i in range(wave_length):
                 enemy1 = Enemy(random.randrange(50, WIDTH - 100), random.randrange(-150, -30))
                 enemy_vel = random.randrange(enemy_vel_min, enemy_vel_max)
@@ -165,7 +195,7 @@ def main():
         player.move_lasers(-5, enemies, bosses)
         # checking for collision between player and enemies
         for enemy in enemies:
-            enemy.enemy_interaction(player, enemies, lives)
+            enemy_interaction(enemy, player, enemies)
 
         # checking for collision between player and bosses
         for boss in bosses:
